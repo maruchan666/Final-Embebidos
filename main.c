@@ -2,6 +2,8 @@
 //voy a poner los drivers solo para que no me salga error
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
+#include "driver/uart.h"
+#include "driver/adc.h"
 
 
 #define pin_num_mosi 23
@@ -43,10 +45,54 @@ void mcp4132_read_register(uint8_t reg, uint8_t *data) {
   buf[1] = 0;
   spi_transaction_t t = {
     .len = 16,
-    .tx_buffer = buf,
-    .rx_buffer = data,
+    .rx_buffer=buf,
   };
   spi_device_transmit(spi_dev, &t);
 }
 
 //funcion para leer registros
+void mcp4132_write_register(uint8_t reg, uint8_t data) {
+  uint8_t buf[2];
+  buf[0] = reg;
+  buf[1] = 0;
+  spi_transaction_t t = {
+    .len = 16,
+    .tx_buffer = buf,
+  };
+  spi_device_transmit(spi_dev, &t);
+}
+
+//función mcp1432_set_cutoff_frequency configura LA RESISTENCIA
+void mpc4132_set_wiper(uint8_t value) {
+
+}
+
+
+//PARTE DE UART y el ADC
+void UartConfig(void) {
+  uart_config_t uart_config = {
+    .baud_rate = 115200,
+    .data_bits = UART_DATA_12_BITS,
+    .parity = UART_PARITY_DISABLE,
+    .stop_bits = UART_STOP_BITS_1,
+    .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
+  };
+  uart_param_config(UART_NUM_1, &uart_config);
+  uart_set_pin(UART_NUM_1, GPIO_NUM_17, GPIO_NUM_16, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  uart_driver_install(UART_NUM_1, 1024 * 2, 0, 0, NULL, 0);
+}
+
+void adc (void) {
+  // Configuración del ADC
+  adc1_config_width(ADC_WIDTH_BIT_12);
+  adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11); // Configura el canal ADC1_CHANNEL_0 con atenuación de 11dB
+}
+
+
+void app_main() {
+  spi_bus_init();
+  UartConfig();
+  adc();
+
+  
+}
